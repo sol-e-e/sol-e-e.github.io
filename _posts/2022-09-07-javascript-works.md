@@ -1,0 +1,75 @@
+---
+layout: post
+title:  "JavaScript - 동작 원리"
+tags: JavaScript
+excerpt_separator: <!--more-->
+---
+
+# 자바스크립트 엔진
+![image](https://github.com/sol-e-e/LeetCode-Problems/assets/105342384/11c2e307-f49b-4d7f-994d-29fd58efbc58)
+자바스크립트를 실행하기 위해서는 자바스크립트 엔진이 필요하다. <!--more-->대표적으로 Google의 V8 엔진이 있다.
+자바스크립트 엔진은 콜 스택(Call Stack)과 메모리 힙(Memory Heap)으로 구성된다.
+* 콜 스택(Call Stack): 코드 실행에 따라 스택이 쌓이는 곳
+* 메모리 힙(Memory Heap): 메모리 할당이 일어나는 곳
+
+<br>
+
+# 런타임
+![image](https://github.com/sol-e-e/LeetCode-Problems/assets/105342384/8d04bf26-9977-4b0a-8396-7bdd9d1d3fc7)
+자바스크립트를 실행하는 데 필요한 구성 요소는 JS 엔진뿐 아니라, 웹 API 및 콜백 큐도 포함한다. 이는 JS가 싱글 스레드 기반이지만 브라우저에서는 비동기적 작업 처리를 할 수 있게 한다.
+
+<br>
+
+## Web APIs
+DOM, Fetch APIs와 같이 JS 엔진이 아닌  브라우저에서 제공되는 API이다. 
+
+<br>
+
+## Callback Queue
+콜백 큐는 실행될 콜백함수가 포함된다. 콜백 큐는 콜백이 First-In-First-Out (FIFO) 방식으로 실행되도록 한다.
+> Queue의 우선순위는 Microtask Queue -> Animation Frames -> Task Queue 순이다.
+
+> Microtask Queue나 Animation Frames를 방문할 때는, 큐 안에 있는 모든 작업들을 수행하지만, Task Queue를 방문할 때는 한 번에 하나의 작업만 call stack으로 전달하고 다른 Queue를 순회한다.
+
+<br>
+
+## Event Loop
+콜 스택과 콜백 큐의 상태를 확인하여, 콜 스택이 비어 있을 때 콜백 큐의 함수를 이동시킨다. -> tick
+
+<br>
+
+## 비동기식 동작
+{% highlight js %}
+function func1() {
+  console.log('func1');
+  func2();
+}
+
+function func2() {
+  setTimeout(function() {
+    console.log('func2');
+  }, 0);
+
+  func3();
+}
+
+function func3() {
+  console.log('func3');
+}
+
+func1();
+{% endhighlight %}
+1. 함수 func1이 호출되면 함수 func1, 함수 func2가 차례대로 콜 스택에 쌓인다.
+2. 함수 func2의 setTimeout은 비동기 함수이므로 Web API가 호출된다. 
+3. setTimeout의 콜백함수는 즉시 실행되지 않고 지정 대기 시간만큼 기다리다가 태스크 큐로 이동한다.
+4. 태스크 큐의 콜백함수는 콜 스택이 비어졌을 때 콜 스택으로 이동되어 실행된다.
+
+<br>
+
+## 정리하면
+ 
+1. JS에서 코드가 실행되면, 콜 스택에 쌓인다.
+2. 스택의 FILO 방식에 따라 콜 스택의 함수가 실행된다.
+3. 비동기 함수가 실행되면 브라우저의 Web APIs를 통해 처리한다.
+4. Web API는 비동기 함수의 콜백함수를 콜백 큐에 넣는다. 
+5. 이벤트 루프는 콜 스택이 비면 콜백 큐의 콜백 함수를 넣는다.
