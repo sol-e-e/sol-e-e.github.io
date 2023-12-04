@@ -1,0 +1,41 @@
+---
+title: JavaScript - 클로저(Closure)
+date: '2022-09-13'
+tags: ['JavaScript']
+---
+
+## Hoisting
+호이스팅은 변수나 함수 등이 선언 전에 사용할 수 있는 현상이다.
+```javascript
+console.log(a);	// undefined
+var a = 2;
+console.log(a);	// 2
+```
+선언되지 않은 변수를 참조할 경우, Reference Error가 나야 하지만 undefined가 지정된다.
+
+```javascript
+var a;
+console.log(a);	// undefined
+a = 2;
+console.log(a);	// 2
+```
+호이스팅에 의해 이렇게 보기 때문이다. 모든 변수 선언은 스코프 내에서 최상위로 호이스팅된다.
+
+### 발생 이유
+실행 컨텍스트가 생성 과정에서 함수 선언, 변수명을 기록한다. 따라서 코드가 실행되기 전에 이미 해당 코드에 속한 함수, 변수명 등을 자바스크립트 엔진이 알고 있다.
+
+### TDZ(Time Dead Zone)
+타임데드존. 변수 사용을 허용하지 않는 구간이다.
+let과 const는 이 구간에 들어간다.
+왜? var은 자바스크립트 엔진이 선언과 동시에 바로 메모리 공간을 할당한다. 반면, let과 const는 해당 코드 위치만 정하고, 선언은 되어있지만 아직 초기화되지 않아서 변수 값을 위한 메모리 공간을 할당하지 않는다.
+
+### 호이스팅 여부
+호이스팅 되는 것
+- var 변수
+- 함수 선언식 function func1() { }
+- `import` 모듈
+호이스팅 안되는 것
+- let, const 변수
+- 함수 표현식 var func1 = function () { }
+- class
+- new function으로 생성된 객체
