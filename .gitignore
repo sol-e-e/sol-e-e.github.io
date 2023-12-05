@@ -6,3 +6,7 @@ vendor
 .DS_Store
 Gemfile.lock
 node_modules/
+.contentlayer
+yarn-error.log
+yarn.lock
+.next
