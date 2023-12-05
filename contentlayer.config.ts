@@ -150,8 +150,8 @@ export default makeSource({
     ],
   },
   onSuccess: async (importData) => {
-    const { allDocuments: allBlogs } = await importData()
-    createTagCount(allBlogs)
-    createSearchIndex(allBlogs)
+    const { allDocuments } = await importData()
+    createTagCount(allDocuments)
+    createSearchIndex(allDocuments)
   },
 })
