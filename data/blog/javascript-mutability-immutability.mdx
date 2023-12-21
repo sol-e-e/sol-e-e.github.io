@@ -1,0 +1,114 @@
+---
+title: JavaScript - Mutability(가변성) vs Immutability(불변성)
+date: '2023-12-21'
+tags: ['JavaScript']
+---
+
+## Mutability(가변성) vs Immutability(불변성)
+자바스크립트에서 데이터 타입에 따라 각각 다른 메모리 상의 위치와 변경 가능성을 갖고 있다.
+가변성은 데이터가 생성되어 메모리가 저장된 후에도 접근하고 변경할 수 있는 데이터 타입이다.
+반면, 불변성은 생성한 후에 변경할 수 없지만 메모리에서 여전히 접근할 수 있는 데이터 타입이다.
+
+### 원시타입(Primitive data type)
+원시 데이터 타입은 변경 불가능한 값(immutable value)이다.
+- Boolean
+- String
+- Number
+- null
+- undefined
+- Symbol
+
+### 참조타입(Reference data type)
+참조 데이터 타입은 변경 가능한 값(mutable value)이다.
+- Function
+- Array
+- Object
+- Set
+- Map
+
+> 그렇다면 immutable한 데이터는 값을 바꾸지 못하는 것인가?
+
+## Mutation(변경) vs Reassignment(재할당)
+
+### Mutation(변경)
+변경은 **값 자체**를 바꾼다.
+
+- Array
+```javascript
+let arr = [1, 2, 3];
+arr[1] = 0;
+```
+
+- Object
+```javascript
+const staff = {
+    name: "Mike", age: 23
+};
+
+staff.name = "Tylor";
+```
+
+**const != immutability**
+`const`로 선언된 변수는 재할당을 금지한다. `const`로 선언된 object나 array 내부 값 변경은 가능하다.
+
+### Reassignment(재할당)
+재할당은 **새로운 데이터**로 바꾼다.
+
+- String
+```javascript
+let weather = 'cold';
+weather[0] = 's'; // 값을 변경하는 mutation 불가능~
+weather = 'freezing'; // 값을 새로운 데이터로 reassignment
+```
+`string`은 원시 타입으로 변경 불가능하다. 따라서 기존 값을 변경하는 mutation은 작동하지 않는다.
+
+## Object(객체)의 Mutability
+객체는 mutable 해서 새로운 값 생성 없이 기존 값을 변경 가능하다.
+참조 데이터 타입에서 진짜 값은 힙에 놓이고 그 값을 가리키는 포인터가 스택에 추가된다.
+
+```javascript
+const staff = {
+    name: "Mike", age: 23
+}
+const staff2 = staff;
+staff2.age = 30;
+console.log(staff.age); // 30
+console.log(staff2.age); // 30
+```
+staff, staff2의 포인터는 스택에 쌓이지만, 힙의 하나의 객체를 가리킨다.
+staff2의 age를 바꾸는 것은 staff 객체의 age를 바꾼다.
+
+> staff의 프로퍼티를 바꾸지 않으면서 staff2의 프로퍼티를 바꾸려면?
+
+### Object.assign()
+이 메소드는 소스 객체로부터 프로퍼티를 다른 타겟 객체로 복사하고 타겟 객체를 반환한다. 소스 객체는 타겟 객체의 값을 오버라이트한다.
+
+`Object.assigin(target, source)`
+
+```javascript
+const staff = {
+    name: "Mike", age: 23
+}
+const staff2 = Object.assign({}, staff);
+staff2.age = 30;
+console.log(staff.age); // 23
+console.log(staff2.age); // 30
+```
+`Object.assigin`으로 복사하면 각자의 프로퍼티를 갖게되어 객체 값 변경에도 서로 영향을 주지 않는다.
+
+### Spread (...)
+
+`const obj2 = {...obj}`
+
+```javascript
+const staff = {
+    name: "Mike", age: 23
+}
+const staff2 = {...staff};
+staff2.age = 30;
+console.log(staff.age); // 23
+console.log(staff2.age); // 30
+```
+
+**참조**
+[Mutability vs Immutability in JavaScript – Explained with Code Examples](https://www.freecodecamp.org/news/mutability-vs-immutability-in-javascript/)

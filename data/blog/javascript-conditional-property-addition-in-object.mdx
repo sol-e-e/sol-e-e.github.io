@@ -7,20 +7,20 @@ tags: ['JavaScript']
 ### 조건부 속성 추가
 
 `...("property" in object && {property: object.property})`
-실제 프로젝트 진행하면서 사용했던 패턴입니다
+실제 프로젝트 진행하면서 사용했던 패턴이다.
 
 ```javascript
 const userInfo = {
     name: "홍길동",
     age: 30,
     ...("address" in userData && {address: userData.address}),
-    ...additionalInfo,
+    ...additionalInfo
 };
 
 ```
 
-- property 존재 여부 확인: `"property" in object` 표현식은 객체에 특정 속성이 있는지 확인합니다.
-- 조건부 속성 객체 생성: && 연산자의 경우 앞의 조건들이 `true`일 경우 마지막에 있는 값이 할당됩니다. `{property: object.property}` 속성을 가진 객체를 만듭니다.
-- 스프레드 연산자 작동: `...` 연산자에 의해 조건부 객체가 풀어진 후 기존 객체에 들어가게 됩니다.
+- property 존재 여부 확인: `"property" in object` 표현식은 객체에 특정 속성이 있는지 확인한다.
+- 조건부 속성 객체 생성: && 연산자의 경우 앞의 조건들이 `true`일 경우 마지막에 있는 값이 할당된다. `{property: object.property}` 속성을 가진 객체를 만든다.
+- 스프레드 연산자 작동: `...` 연산자에 의해 조건부 객체가 풀어진 후 기존 객체에 들어가게 된다.
 
-**if 문을 사용하지 않고 원본 객체를 유지하면서 동적으로 객체를 구성할 수 있어 코드를 간결하고 유연성있게 작성할 수 있었습니다.**
+**if 문을 사용하지 않고 원본 객체를 유지하면서 동적으로 객체를 구성할 수 있어 코드를 간결하고 유연성있게 작성할 수 있었다.**
