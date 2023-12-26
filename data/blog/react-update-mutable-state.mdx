@@ -1,0 +1,124 @@
+---
+title: React - Update mutable state
+date: '2023-12-26'
+tags: ['JavaScript', 'React']
+---
+
+React에서는 상태가 변경되면 렌더링 트리를 새롭게 생성한다. Object state는 기술적으로 mutable 하지만 immutable 하게 변경하지 않는다면, 새로운 객체가 생성되지 않고 상태 변경을 감지할 수 없다. 객체를 mutation하는 대신 항상 교체해야한다.
+
+```javascript
+const [position, setPosition] = useState({ x: 0, y: 0 });
+position.x = 5; // 상태 변경을 감지하지 못함
+```
+
+## Object state
+- 재렌더링을 실행하려면, 새 객체를 생성해서 setState 함수에 전달해야한다.
+```javascript
+const [todos, setTodos] = useState({key1: 'todo1',  key2: 'todo2'});
+const handleAdd = (newItem) => {
+    // newItem = {key3: 'todo3'};
+    setTodos(prev => ({...prev, ...newItem}));
+};
+const handleUpdate = (key, value) => {
+    setTodos(prev => ({...prev, [key]: value}));
+};
+const handleDelete = (key) => {
+    setTodos(prev => {
+        const newObj = {...prev};
+        delete newObj[key];
+        return newObj;
+    });
+};
+```
+- Updating a nested object
+```javascript
+const [person, setPerson] = useState({
+  name: 'Niki',
+  artwork: {
+    title: 'Blue Nana',
+    city: 'Hamburg'
+  }
+});
+// Updating person.artwork.city
+setPerson(prev => ({
+  ...prev,
+  artwork: {
+    ...prev.artwork,
+    city: 'New Delhi'
+  }
+}));
+```
+- useImmer
+Immer 라이브러리 사용하면 object copy code를 줄일 수 있다.
+```javascript
+import { useImmer } from 'use-immer';
+const [person, setPerson] = useImmer({
+  name: 'Niki',
+  artwork: {
+    title: 'Blue Nana',
+    city: 'Hamburg'
+  }
+});
+// Updating person.artwork.city
+setPerson(prev => {
+  prev.artwork.city = 'New Delhi'
+});
+```
+
+## Array state
+```javascript
+const [todos, setTodos] = useState(['todo1', 'todo2']);
+const handleAdd = (newItem) => {
+    setTodos(prev => [...prev, newItem]);
+};
+const handleAddAtIndex = (index, newItem) => {
+    setTodos(prev => [...prev.slice(0, index), newItem, ...prev.slice(index)]);
+};
+const handleUpdating = (index, newItem) => {
+    setTodos(prev => prev.map((item, i) => i === index ? newItem : item));
+};
+const handleDeleteByIndex = (index) => {
+    setTodos(prev => prev.filter((_, i) => i !== index));
+};
+const handleDeleteByValue = (itemToDelete) => {
+    setTodos(prev => prev.filter(item => item !== itemToDelete));
+};
+const handleSort = () => {
+    setTodos(prev => {
+        const newArray = [...prev];
+        newArray.reverse();
+        return newArray;
+    });
+};
+```
+
+## Set state
+```javascript
+const [todos, setTodos] = useState(new Set(['todo1', 'todo2']));
+const handleAdd = (newItem) => {
+    setTodos(prev => new Set([...prev, newItem]));
+};
+const handleDelete = (itemToDelete) => {
+    setTodos(prev => new Set([...prev].filter(item => item !== itemToDelete)));
+};
+```
+
+## Map state
+```javascript
+const [todos, setTodos] = useState(new Map([['key1', 'todo1'], ['key2', 'todo2']]));
+const handleAddOrUpdate = (key, value) => {
+    setTodos(prev => {
+        const newMap = new Map(prev);
+        newMap.set(key, value);
+        return newMap;
+    });
+};
+const handleDelete = (key) => {
+    setTodos(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(key);
+        return newMap;
+    });
+};
+```
+
