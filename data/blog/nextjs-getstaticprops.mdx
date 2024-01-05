@@ -14,7 +14,7 @@ next.js의 getStaticProps 함수는 빌드 타임에서 데이터를 가져오�
 ### how it works ?
 1. fetch data: `getStaticProps`는 API 나 다른 소스로 부터 필요한 데이터를 가져온다.
 2. return props: 페이지에 props로 데이터를 반환한다.
-3. pre-render: next.jst가 빌드 타임에서 페이지를 pre-render할 때 이 props를 사용한다.
+3. pre-render: next.js가 빌드 타임에서 페이지를 pre-render할 때 이 props를 사용한다.
 
 ```javascript
 export default function Page({data}) {
