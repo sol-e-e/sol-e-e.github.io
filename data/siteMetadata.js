@@ -8,7 +8,7 @@ const siteMetadata = {
   theme: 'system', // system, dark or light
   siteUrl: 'https://sol-e-e.github.io',
   siteRepo: 'https://github.com/sol-e-e/sol-e-e.github.io',
-  siteLogo: '/static/images/seeding.png',
+  siteLogo: '/static/images/logo.png',
   socialBanner: '/static/images/twitter-card.png',
   // mastodon: 'https://mastodon.social/@mastodonuser',
   email: 'iamsol.sollee@gmail.com',
