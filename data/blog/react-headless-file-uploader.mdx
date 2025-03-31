@@ -1,0 +1,126 @@
+---
+title: Headless 컴포넌트로 File Uploader 재사용성 높이기
+date: '2025-03-31'
+tags: ['프론트엔드', 'React', '패턴']
+---
+
+## 소개
+
+약국 웹 서비스에서 페이지마다 다른 스타일의 파일 업로더를 구현하며 코드 중복과 유지보수 부담이 커졌습니다. 개발 속도와 팀 생산성을 위해 Headless 컴포넌트 방식으로 공통 로직을 분리했습니다.
+
+❌ 문제점
+
+- 약국 프로필 설정, 채팅 페이지 등에서 업로더 UI가 달라 각각 별도 코드 작성
+- 파일 유효성 검사와 상태 관리가 중복되며 코드량 증가
+
+✅ 해결 방법: **Headless 컴포넌트**
+
+- `FileUploader` 컴포넌트 로직(유효성 검사, 상태 관리)를 분리하고, UI는 사용처에서 자유롭게 커스터마이징
+- 코드 중복을 줄이고 다양한 UI 요구사항에 유연하게 대응
+
+## Headless 컴포넌트란?
+
+Headless 컴포넌트는 UI를 제공하지 않고 로직과 상태만 제공하는 설계 패턴으로, 공통 기능을 재사용하면서도 UI는 독립적으로 구성할 수 있습니다.
+
+### 구현 과정
+
+파일 업로드의 공통 로직을 분리하고, 약국 웹의 다양한 UI에 맞춰 설계했습니다.
+
+#### 1. FileUploader 컴포넌트 설계
+
+```typescript:FileUploader.tsx
+
+const FileUploader = ({
+  children,
+  onChange,
+  format,
+  maxCount,
+  maxCapacity,
+  files,
+}: FileUploaderProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const acceptableTypes = getMimeTypesAccepts(format);
+
+  const triggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const inputFiles = e.target.files;
+      if (!inputFiles?.length) return;
+
+      const newFiles = Array.from(inputFiles);
+      try {
+        validateFiles(newFiles, files, { acceptableTypes, maxCount, maxCapacity });
+        onChange([...files, ...newFiles]);
+      } catch (error) {
+        e.target.value = '';
+        toast.error((error as Error).message);
+      }
+    },
+    [files, acceptableTypes, maxCount, maxCapacity, onChange],
+  );
+
+  const removeFile = useCallback(
+    (index: number) => {
+      const updatedFiles = files.filter((_, i) => i !== index);
+      onChange(updatedFiles);
+    },
+    [files, onChange],
+  );
+
+  return (
+    <>
+      {children({
+        triggerUpload,
+        files,
+        removeFile,
+        handleFileInputChange,
+      })}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileInputChange}
+        onClick={(e) => ((e.target as HTMLInputElement).value = '')}
+        accept={acceptableTypes}
+        style={{ display: 'none' }}
+        multiple={maxCount !== undefined && maxCount !== 1}
+      />
+    </>
+  );
+};
+```
+
+- `triggerUpload`, `removeFile` 등 로직을 제공하며, UI는 `children`으로 위임
+- 파일 형식, 개수, 용량 유효성 검사 공통화
+
+#### 2. 다양한 UI에서 사용
+
+- 버튼 업로드: 간단한 파일 첨부 버튼으로 업로드
+- 미리보기 리스트: 프로필 설정에서 이미지 미리보기와 삭제 기능 지원
+- 드래그앤드롭: 채팅방에서 별도 UI 없이 드래그앤드롭과 복사 붙여넣기로 파일 업로드 지원
+
+```typescript
+// 미리보기 업로더 (간략화)
+const PreviewUploader = () => (
+  <FileUploader onChange={setFiles} files={files} maxCount={3} maxCapacity={{ single: { unit: 'MB', size: 5 } }}>
+    {({ triggerUpload, files, removeFile }) => (
+      <div>
+        <button onClick={triggerUpload}>업로드</button>
+        {files.map((file, i) => (
+          <div key={i}>
+            <img src={URL.createObjectURL(file)} alt="preview" width="100" />
+            <button onClick={() => removeFile(i)}>삭제</button>
+          </div>
+        ))}
+      </div>
+    )}
+  </FileUploader>
+);
+```
+
+### 결과
+
+- 페이지별 중복 코드 30% 감소, 유지보수 시간 단축
+- 다양한 UI 요구사항에 빠르게 대응하며 개발 효율성 향상
