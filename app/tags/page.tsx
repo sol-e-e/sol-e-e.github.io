@@ -2,7 +2,7 @@ import Link from '@/components/Link'
 import Tag from '@/components/Tag'
 import tagData from 'app/tag-data.json'
 import { genPageMetadata } from 'app/seo'
-import { getSlug } from '@/data/tag'
+import { getSlug, getTag } from '@/data/tag'
 
 export const metadata = genPageMetadata({ title: 'Tags', description: 'Things I blog about' })
 
@@ -23,7 +23,7 @@ export default async function Page() {
           {sortedTags.map((t) => {
             return (
               <div key={t} className="mb-2 mr-5 mt-2">
-                <Tag text={t} />
+                <Tag text={getTag(t)} />
                 <Link
                   href={`/tags/${getSlug(t)}`}
                   className="-ml-2 text-sm font-semibold uppercase text-gray-600 dark:text-gray-300"
