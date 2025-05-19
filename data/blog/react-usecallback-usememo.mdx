@@ -1,124 +1,150 @@
 ---
 title: useCallback, useMemo의 사용
 date: '2025-03-18'
-tags: ['React', '최적화']
+tags: ['React', '최적화', 'hook']
 ---
 
 React에서 렌더링 성능을 최적화할 때 `useCallback`과 `useMemo`를 활용하면 불필요한 연산과 함수 생성을 방지할 수 있습니다.
 
 ## 사용 이유
+
 ### JavaScript 객체의 동등성
+
 자바스크립트에서 객체는 **참조 타입(Reference Type)** 이기 때문에, 두 객체가 같은 내용을 가지고 있어도 **새로운 객체로 생성되면 참조값이 달라집니다.**
+
 ### React에서 발생하는 문제
+
 React의 리렌더링 최적화는 `===`(엄격한 비교)를 기반으로 이루어집니다. 따라서, `props`로 객체를 전달할 때 **렌더링될 때마다 새로운 객체나 함수가 생성** 되면 다른 값으로 인식되어 불필요한 리렌더링이 발생합니다.
 
 ## useCallback 이란?
+
 ### 개념
+
 `useCallback`은 함수를 메모이제이션하여 동일한 함수를 유지하는 훅입니다. `React.memo`와 함께 사용하면 불필요한 컴포넌트 리렌더링을 방지할 수 있습니다.
 
 ### 문법
+
 ```javascript
 const memoizedCallback = useCallback(() => {
-  doSomething(a, b);
-}, [a, b]);
+  doSomething(a, b)
+}, [a, b])
 ```
 
 ### 언제 사용할까?
+
 ✔️ **자식 컴포넌트에 `props`로 함수를 전달할 때 (`React.memo`와 함께 사용)**
+
 ```javascript
 const Button = React.memo(({ handleClick }) => {
-  return <button onClick={handleClick}>Click me</button>;
-});
+  return <button onClick={handleClick}>Click me</button>
+})
 
 const Parent = () => {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0)
 
   const increment = useCallback(() => {
-    setCount((prev) => prev + 1);
-  }, []); // 의존성 배열이 비어 있으면 최초 생성된 함수를 재사용
+    setCount((prev) => prev + 1)
+  }, []) // 의존성 배열이 비어 있으면 최초 생성된 함수를 재사용
 
   return (
     <div>
       <p>Count: {count}</p>
       <Button handleClick={increment} />
     </div>
-  );
-};
+  )
+}
 ```
+
 ✔️ **`useEffect`의 의존성 배열에서 함수가 변경되는 문제를 방지할 때**
+
 ```javascript
 const fetchData = useCallback(() => {
   fetch(`api/${id}`)
-}, [id]);
+}, [id])
 
 useEffect(() => {
-  fetchData();
-}, [fetchData]);
+  fetchData()
+}, [fetchData])
 ```
+
 ✔️ **커스텀 Hook에서 함수를 반환할 때**
+
 ```javascript
 function useRouter() {
-  const { dispatch } = useContext(RouterStateContext);
+  const { dispatch } = useContext(RouterStateContext)
 
-  const navigate = useCallback((url) => {
-    dispatch({ type: 'navigate', url });
-  }, [dispatch]);
+  const navigate = useCallback(
+    (url) => {
+      dispatch({ type: 'navigate', url })
+    },
+    [dispatch]
+  )
 
   const goBack = useCallback(() => {
-    dispatch({ type: 'back' });
-  }, [dispatch]);
+    dispatch({ type: 'back' })
+  }, [dispatch])
 
   return {
     navigate,
     goBack,
-  };
+  }
 }
 ```
 
 ## useMemo 이란?
+
 ### 개념
+
 `useMemo`은 연산 결과를 메모이제이션하여, 같은 입력값이라면 이전 계산된 결과를 재사용하는 훅(Hook)입니다. 불필요한 재계산을 방지할 수 있습니다.
 
 ### 문법
+
 ```javascript
-const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b])
 ```
 
 ### 언제 사용할까?
+
 ✔️ **계산량이 많아 성능에 영향을 줄 수 있는 연산이 있을 때**
+
 ```javascript
-const fibonacci = useMemo(() => computeFibonacci(n), [n]);
+const fibonacci = useMemo(() => computeFibonacci(n), [n])
 ```
+
 ✔️ **`props`로 전달하는 객체가 매번 새로 생성되는 문제를 해결할 때**
+
 ```javascript
-const memoizedObject = useMemo(() => ({ label: 'text', text }), [text]);
-<MyComponent data={memoizedObject} />
+const memoizedObject = useMemo(() => ({ label: 'text', text }), [text])
+;<MyComponent data={memoizedObject} />
 ```
+
 ✔️ **`useEffect`의 의존성 배열에 불필요한 재실행을 방지할 때**
+
 ```javascript
 const options = useMemo(() => ({ ...items }), [items])
 useEffect(() => {
-  fetchData(options);
-}, [options]);
+  fetchData(options)
+}, [options])
 ```
 
 ## useCallback vs useMemo
-|  | useCallback | useMemo |
-|----|----|----|
-| 리턴값 | 함수 | 값(객체, 배열, 숫자 등) |
-| 사용 목적 | 함수 재생성 방지 | 연산 최적화 |
+
+|                | useCallback                              | useMemo                        |
+| -------------- | ---------------------------------------- | ------------------------------ |
+| 리턴값         | 함수                                     | 값(객체, 배열, 숫자 등)        |
+| 사용 목적      | 함수 재생성 방지                         | 연산 최적화                    |
 | 주요 사용 사례 | `React.memo`와 함께 불필요한 렌더링 방지 | 계산량이 많은 함수의 결과 캐싱 |
 
 ## 활용 방법
+
 ❌ 단순한 값이나 함수를 매번 새로 생성해도 성능 문제가 없는 경우 사용할 필요가 없습니다.\
 ❌ `useEffect`의 불필요한 재실행을 방지하는 경우 함수 의존성을 제거하는 것이 더 좋을 수도 있습니다.\
 ✅ `useMemo`는 연산량이 많은 값이 있을 때 사용\
 ✅ `useMemo`는 자식 컴포넌트에 객체를 `props`로 넘길때 사용\
 ✅ `useCallback`은 자식 컴포넌트에 함수를 `props`로 넘길때 사용\
 ✅ `React.memo`와 `useCallback`을 함께 활용하여 렌더링 최적화\
-💡 과사용하면 성능이 더 나빠질 수 있음 → 진짜 성능 문제가 발생하는 곳에서만 사용!  
-  
-    
+💡 과사용하면 성능이 더 나빠질 수 있음 → 진짜 성능 문제가 발생하는 곳에서만 사용!
+
 **참조**\
 [React 공식 문서 - useCallback](https://ko.react.dev/reference/react/useCallback)\
 [React 공식 문서 - useMemo](https://ko.react.dev/reference/react/useMemo)
