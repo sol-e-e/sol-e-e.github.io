@@ -1,0 +1,148 @@
+---
+title: React 동시성 훅 - useTransition, useDefferedValue
+date: '2025-05-19'
+tags: ['React', 'hook', '최적화']
+---
+
+React 18에서 도입된 **동시성 렌더링(Concurrent Rendering)**은 UI 렌더링을 더 효율적으로 관리하며, 사용자 경험을 부드럽게 만드는 기능을 제공합니다. 이 글에서는 동시성의 핵심 Hook인 `useTransition`과 `useDeferredValue`를 소개하고 비교해보겠습니다.
+
+## React 동시성이란?
+
+이전에는 렌더링이 블로킹(blocking) 방식으로 동작했습니다. 즉, 컴포넌트 트리를 렌더링하는 작업이 시작되면 이 과정이 완료될 때까지 UI는 응답하지 않았습니다. 이로 인해 무거운 작업의 렌더링은 UI를 잠시 '얼어붙게' 만들 수 있었습니다.
+
+React 18에서는 이를 해결하기 위한 동시성 모드를 제공합니다.
+
+⚙️ 동시성 모드의 핵심 개념:
+
+- **중단 가능한 렌더링:** 렌더링 작업이 시작된 후에도 중단하고 더 중요한 작업을 처리한 후 재개할 수 있습니다.
+- **우선순위 기반 업데이트:** 모든 업데이트가 동일하게 취급되지 않고, 중요도에 따른 다른 우선순위를 가집니다.
+- **백그라운드 렌더링:** 메인 스레드를 차단하지 않고 UI 업데이트를 준비할 수 있습니다.
+
+`useTransition`과 `useDeferredValue`는 이러한 동시성 기능을 활용하는 주요 도구입니다.
+
+## 🌀 useTransition - 업데이트 우선순위 낮추기
+
+### 기본 개념
+
+`useTransition`은 상태 업데이트에 우선순위를 지정할 수 있게 해주는 훅입니다. 이를 통해 특정 상태 업데이트를 '낮은 우선순위'로 표시하여, React가 더 중요한 업데이트를 먼저 처리하도록 할 수 있습니다.\
+예: 사용자의 타이핑은 즉시 반응하고(높은 우선순위), 타이핑에 따른 필터링 결과는 나중에 보여줍니다(낮은 우선순위).
+
+### 사용 예제
+
+```js
+import { useState, useTransition } from 'react'
+
+function SearchComponent() {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [isPending, startTransition] = useTransition()
+
+  const handleChange = (e) => {
+    // 즉시 업데이트 (높은 우선순위)
+    setQuery(e.target.value)
+
+    // 전환으로 표시 (낮은 우선순위)
+    startTransition(() => {
+      // 무거운 필터링 작업
+      setResults(filterItems(e.target.value))
+    })
+  }
+
+  return (
+    <>
+      <input value={query} onChange={handleChange} />
+      {isPending ? <p>결과 업데이트 중...</p> : <ResultsList results={results} />}
+    </>
+  )
+}
+```
+
+- `startTransition`으로 감싼 업데이트는 낮은 우선순위로 처리됩니다.
+
+### 주요 특징
+
+- Transition은 차단되지 않습니다: `startTransition`내의 업데이트는 사용자 입력과 같은 높은 우선순위 업데이트에 의해 중단될 수 있습니다.
+- 동기 실행: `startTransition`에 전달된 콜백은 즉시 실행됩니다. `setTimeout`과 같이 나중에 실행되는 것이 아닙니다.
+- 비동기 작업과 함께 사용할 때 주의가 필요합니다.
+
+```js
+startTransition(async () => {
+  const data = await fetchData()
+  // 주의: 아래 상태 업데이트는 startTransition의 영향을 받지 않을 수 있습니다
+  setData(data)
+})
+
+// 대신 이렇게 하세요:
+startTransition(() => {
+  fetchData().then((data) => {
+    // 다른 startTransition으로 래핑
+    startTransition(() => {
+      setData(data)
+    })
+  })
+})
+```
+
+## 🕓 useDeferredValue - 값 지연 처리
+
+### 기본 개념
+
+useDeferredValue는 값의 '지연된 버전'을 생성하는 훅입니다. 이를 통해 UI의 중요한 부분을 먼저 업데이트하고, 덜 중요한 부분은 나중에 업데이트할 수 있습니다.
+
+### 사용 예제
+
+```js
+import { useState, useDeferredValue } from 'react'
+
+function SearchResultsPage() {
+  const [query, setQuery] = useState('')
+  const deferredQuery = useDeferredValue(query)
+
+  const handleChange = (e) => {
+    setQuery(e.target.value)
+  }
+
+  // 지연된 쿼리로 무거운 렌더링 수행
+  const results = useMemo(() => computeExpensiveResults(deferredQuery), [deferredQuery])
+
+  return (
+    <>
+      <input value={query} onChange={handleChange} />
+      <ResultsList results={results} />
+    </>
+  )
+}
+```
+
+### 주요 특징
+
+- 지연은 고정되지 않습니다: `debounce`나 `throttle`과 달리, 고정된 지연 시간을 가지지 않습니다. 첫 번째 렌더링이 완료되는 즉시 지연된 값의 렌더링을 시도합니다.
+- 중단 가능한 렌더링: 지연된 값의 렌더링은 더 중요한 업데이트가 발생하면 중단될 수 있습니다.
+- 메모제이션과 함께 사용하기
+- 시각적 피드백 제공하기
+
+## 차이점 비교
+
+| 특징        | useTransition                                       | useDeferredValue                                        |
+| ----------- | --------------------------------------------------- | ------------------------------------------------------- |
+| 목적        | 상태 업데이트를 transition으로 처리해 우선순위 지정 | 값의 업데이트를 지연시켜 렌더링 부담 감소               |
+| 피드백      | isPending 상태 제공                                 | 명시적인 상태 제공 안함 (직접 비교)                     |
+| 사용 시기   | 상태 업데이트 코드에 직접 접근 가능할 때            | 값은 알지만 상태 업데이트 함수에 직접 접근할 수 었을 때 |
+| 사용 사례   | 탭 전환, 페이지 전환                                | 검색 결과, 대형 목록 렌더링                             |
+| 적합한 상황 | 명시적으로 전환 작업을 구분하고 싶을 때             | 값 변경에 따른 렌더링을 최적화하고 싶을 때              |
+
+### 사용해야할 때
+
+- **useTransition**: 검색 결과 로딩, 탭 전환, 데이터 가져오기처럼 **명시적인 상태 전환**이 필요하고 로딩 상태를 표시해야 할 때.
+- **useDeferredValue**: 입력값이 빠르게 변하며 그에 따라 무거운 렌더링(예: 리스트 필터링, 차트 업데이트)이 발생할 때.
+
+### 주의점
+
+- 동시성 활성화: useTransition과 useDeferredValue는 createRoot를 사용한 React 18 환경에서만 동작합니다.
+- 동일한 상태/값에 두 훅을 함께 사용하지 마세요.
+- 텍스트 입력 제어에는 이 훅들을 사용하지 마세요.
+
+**참조**\
+[React 공식 문서 - useTransition](https://react.dev/reference/react/useTransition)\
+[React 공식 문서 - useDeferredValue](https://react.dev/reference/react/useDeferredValue)\
+[React 18 Concurrent Rendering 소개](https://react.dev/blog/2022/03/29/react-v18)
