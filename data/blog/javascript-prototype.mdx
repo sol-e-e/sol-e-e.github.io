@@ -9,8 +9,8 @@ tags: ['JavaScript']
 
 ## 프로토타입(Prototype)
 
-자바스크립트는 **프로토타입 기반 언어**로 다른 객체지향 언어들이 클래스를 통한 상속을 사용하는 것과 달리, 자바스크립트는 프로토타입을 통해 객체 간 상속을 구현합니다.
-프로토타입 기반 상속이란 객체가 다른 객체로부터 속성과 메서드를 직접 상속받는 방식입니다. 자바스크립트에서는 객체를 생성하면, 해당 객체는 자신의 프로토타입 객체와 연결됩니다. 이 프로토타입 객체의 속성과 메서드를 마치 자신의 프로토타입 객체와 연결됩니다.
+자바스크립트는 **프로토타입 기반 언어**로 다른 객체지향 언어들이 클래스를 통한 상속을 사용하는 것과 달리, 자바스크립트는 프로토타입을 통해 객체 간 상속을 구현합니다. \
+프로토타입 기반 상속이란 객체가 다른 객체로부터 속성과 메서드를 직접 상속받는 방식입니다. 자바스크립트에서는 객체를 생성하면, 해당 객체는 자신의 프로토타입 객체와 연결됩니다. 이 프로토타입 객체의 속성과 메서드를 마치 자신의 프로토타입 객체와 연결됩니다. \
 프로토타입 시스템의 가장 큰 장점은 **메모리 효율성**입니다. 모든 인스턴스가 메서드를 각각 가지는 대신, 프로토타입에 한 번만 정의하여 모든 인스턴스가 공유할 수 있기 때문입니다. 수백 개의 객체가 있을 때, 각 객체마다 동일한 메서드를 복제하지 않고 프로토타입을 통해 공유함으로써 메모리를 크게 절약할 수 있습니다.
 
 ```javascript
@@ -197,3 +197,11 @@ class Dog extends Animal {
 const rex = new Dog('Rex', 'German Shepherd')
 console.log(rex.speak()) // "Rex barks!"
 ```
+
+---
+
+**참조**
+
+[MDN - 객체 프로토타입](https://developer.mozilla.org/ko/docs/Learn/JavaScript/Objects/Object_prototypes) \
+[MDN - 상속과 프로토타입](https://developer.mozilla.org/ko/docs/Web/JavaScript/Inheritance_and_the_prototype_chain) \
+[Prototype - 1. 프로토타입 객체](https://poiemaweb.com/js-prototype)
