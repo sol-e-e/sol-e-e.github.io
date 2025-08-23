@@ -5,7 +5,7 @@ const siteMetadata = {
   headerTitle: 'sol-e-e',
   description: '메모장',
   language: 'en-us',
-  theme: 'system', // system, dark or light
+  theme: 'light', // system, dark or light
   siteUrl: 'https://sol-e-e.github.io',
   siteRepo: 'https://github.com/sol-e-e/sol-e-e.github.io',
   siteLogo: '/static/images/logo.png',
