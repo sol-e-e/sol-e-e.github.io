@@ -1,73 +1,257 @@
 ---
 title: JavaScript - this
 date: '2022-09-04'
+lastmod: '2025-08-25'
 tags: ['JavaScript']
 ---
 
-### this
-자바스크립트에서 함수는 호출될 때 암묵적으로 this를 할당받는다.
-함수의 호출 방식에 따라 this에 바인딩 될 객체가 결정된다.
+📝 자바스크립트의 this에 대해 정리한 내용입니다.
 
-### 함수 호출 방식과 this 바인딩
-#### 함수 호출
+## this
+
+자바스크립트에서 `this`는 현재 실행 중인 코드의 문맥(context)을 나타내는 키워드입니다. 함수가 호출될 때마다 자동으로 생성되며, 해당 함수가 어떻게 호출되었는지에 따라 그 값이 결정됩니다. `this`는 객체 지향 프로그래밍 언어에서 자주 사용되는 개념으로, 메서드가 자신이 속한 객체의 속성에 접근할 수 있게 해주는 매커니즘입니다. \
+이벤트 핸들러, 콜백 함수, 객체 메서드 등 다양한 상황에서 `this`의 값이 달라지므로, 예상치 못한 동작을 방지하기 위해 이해해야 합니다. \
+
+### 자바스크립트의 `this` 특징
+
+- **동적 바인딩**: 대부분의 언어에서 `this`는 정적으로 결정되지만, 자바스크립트에서는 함수 호출 방식에 따라 동적으로 결정됩니다.
+- **전역 객체**: 일반 함수에서 `this`는 전역 객체(브라우저에서 `window`, Node.js에서 `global`)에 바인딩됩니다.
+- **명시적 변경 가능**: `call`, `apply`, `bind` 메서드를 사용하여 `this`의 값을 명시적으로 변경할 수 있습니다.
+
+## this 바인딩
+
+### 기본 바인딩 (Default Binding)
+
+일반 함수에서 `this`는 전역 객체에 바인딩됩니다.
+
 ```javascript
-var a = "Global";
-
-function whatsThis() {
-  return this.a;
+function show() {
+  console.log(this) // 전역 객체(window/global)
 }
 
-whatsThis(); // 'Global';
+show() // 전역 객체(window/global)
 ```
-this는 기본적으로 전역 객체(Global Object)에 바인딩한다. 전역객체는 모든 객체의 최상위 객체를 의미하며 일반적으로 브라우저 사이드에서는 window, 서버 사이드(Node.js)에서는 global 객체를 의미한다.
 
-내부함수는 일반 함수, 메소드, 콜백함수 어디에서 선언되었든 this는 전역객체를 바인딩한다. 콜백함수도 함수이므로 this는 전역객체에 바인딩한다.
-> 콜백함수란 자기 자신을 다른 함수의 인자로 넘겨 실행하도록 하는 함수로, 함수의 제어권도 같이 넘긴다. ex) sort(), setInterval()
+엄격 모드('use strict')에서는 `this`가 `undefined`로 바인딩됩니다.
 
-
-### 메소드 호출
 ```javascript
-const obj = { a: "Custom" };
-var a = "Global";
+'use strict'
 
-function whatsThis() { return this.a; }
-
-obj.whatsThis = whatsThis;
-obj.whatsThis(); // 'Custom';
-```
-메소드 내의 this는 해당 함수를 호출한 객체에 바인딩한다.
-
-### 생성자 함수 호출
-```javascript
-function C() { this.a = 37; }
-
-let o = new C();
-console.log(o.a); // 37
-```
-기존 함수에 new 연산자를 붙여서 호출하면 해당 함수는 생성자 함수로 동작한다.
- 1. 빈 객체가 생성되면 함수 내의 this는 이 빈 객체를 가리킨다.
- 2. this를 이용해 생성자 함수 내 프로퍼티와 메소드를 정의한다.
- 3. 암묵적으로 this를 반환한다. this를 반환하지 않으면 생성자 함수가 아니다.
-
-### apply, call, bind 호출
-apply, call, bind로 this를 특정 객체에 명시적으로 할당한다.
-```javascript
-function add(c, d) {
-  return this.a + this.b + c + d;
+function show() {
+  console.log(this) // undefined
 }
 
-const o = { a: 1, b: 3};
-add.call(o, 5, 7); //16
-add.apply(o, [10, 20]); //34
+show() // undefined
 ```
-함수 내부의 this에 바인딩할 객체와 함수에 전달할 argument를 넘긴다. apply는 배열로 call은 나열해서 전달한다.
+
+함수 내부의 정의된 중첩 함수나 콜백 함수에서도 기본 바인딩이 적용됩니다. 이로 인해 외부 함수의 `this`와 중첩 함수의 `this`가 다르게 바인딩될 수 있습니다.
+
 ```javascript
-function f() { return this.a; }
+const user = {
+  name: 'John',
+  greet: function () {
+    console.log(`Hello, I'm ${this.name}`) // "Hello, I'm John"
 
-const g = f.bind({a: "azerty"});
-console.log(g()); // azerty
+    function innerFunction() {
+      console.log(`Inner: ${this.name}`) // "Inner: undefined" (전역 객체)
+    }
 
-const h = g.bind({a: "yoo"});
-console.log(h()); // azerty
+    innerFunction()
+
+    setTimeout(function () {
+      console.log(`Timeout: ${this.name}`) // "Timeout: undefined" (전역 객체)
+    }, 100)
+  },
+}
+
+user.greet()
 ```
-bind는 this를 바꾼 새로운 함수를 생성하지만 함수 호출은 하지않는다. 한번만 동작해서 this의 변경이 불가하다.
+
+이를 해결하기 위해서는 다음과 같은 방법을 사용할 수 있습니다.
+
+```javascript
+const user = {
+  name: 'John',
+  greet: function () {
+    console.log(`Hello, I'm ${this.name}`) // "Hello, I'm John"
+
+    // 변수에 할당하여 사용
+    function innerFunction() {
+      const self = this
+      console.log(`Inner: ${self.name}`) // "Inner: John"
+    }
+
+    innerFunction()
+
+    // 화살표 함수 사용
+    const arrowFunction = () => {
+      console.log(`Arrow: ${this.name}`) // "Arrow: John"
+    }
+
+    arrowFunction()
+
+    // bind 메서드 사용
+    setTimeout(function () {
+      console.log(`Timeout: ${this.name}`) // "Timeout: John"
+    }, 100).bind(this)
+  },
+}
+
+user.greet()
+```
+
+### 암시적 바인딩 (Implicit Binding)
+
+객체의 메서드로 함수가 호출될 때 `this`는 (메서드를 호출한) 해당 객체에 바인딩됩니다.
+
+```javascript
+const user = {
+  name: 'John',
+  greet() {
+    console.log(`Hello, I'm ${this.name}`)
+  },
+  userInfo: {
+    name: 'Jane',
+    greet() {
+      console.log(`Hello, I'm ${this.name}`)
+    },
+  },
+}
+
+user.greet() // "Hello, I'm John"
+user.userInfo.greet() // "Hello, I'm Jane"
+```
+
+메서드를 변수에 할당하고 그 변수를 통해 호출하면, 메서드와 객체와 연결이 끊어집니다.
+
+```javascript
+const user = {
+  name: 'John',
+  greet() {
+    console.log(`Hello, I'm ${this.name}`)
+  },
+}
+
+const greetFn = user.greet // 메서드를 변수에 할당
+greetFn() // "Hello, I'm undefined" - 일반 함수 호출로 처리되어 this가 전역 객체를 가리킴
+setTimeout(user.greet, 100) // "Hello, I'm undefined" - this 바인딩 상실
+```
+
+### 명시적 바인딩 (Explicit Binding)
+
+`call`, `apply`, `bind` 메서드를 사용하여 `this`의 값을 명시적으로 지정할 수 있습니다.
+
+```javascript
+function introduce(greeting, punctuation) {
+  console.log(`${greeting}, I'm ${this.name}${punctuation}`)
+}
+
+const person = { name: 'Alice' }
+
+// call: 첫 번째 인자는 this로 사용할 객체, 나머지 인자는 함수의 인자로 전달
+introduce.call(person, 'Hi', '!') // "Hi, I'm Alice!"
+
+// apply: 첫 번째 인자는 this로 사용할 객체, 두 번째 인자는 함수 인자를 담은 배열
+introduce.apply(person, ['Hello', '.']) // "Hello, I'm Alice."
+
+// bind: 첫 번째 인자는 this로 사용할 객체, 반환값은 바인딩된 새 함수
+const boundFn = introduce.bind(person, 'Hey')
+boundFn('?') // "Hey, I'm Alice?"
+```
+
+- call(): 인자를 쉼표로 구분하여 전달. 즉시 함수 실행이 필요할 때 사용.
+- apply(): 인자를 배열로 전달. 배열 형태의 인자가 있거나 인자 개수가 동적일 때 유용.
+- bind(): 바인딩된 새 함수를 반환하며 즉시 실행하지 않음. 이벤트 핸들러나 콜백 함수에서 this를 유지하고 싶을 때 유용.
+
+### `new` 바인딩 (Constructor Binding)
+
+`new` 키워드를 사용하면 생성자 함수로 동작하며, `this`는 새로 생성된 객체에 바인딩됩니다.
+
+```javascript
+function User(name) {
+  this.name = name
+  this.isActive = true
+
+  // this를 반환하지 않아도 자동으로 this가 반환됨
+}
+
+const user = new User('John')
+console.log(user.name) // "John"
+console.log(user.isActive) // true
+```
+
+생성자 함수 내에서 `return` 키워드를 사용하면, 반환 값이 달라질 수 있습니다.
+
+```javascript
+function User(name) {
+  this.name = name
+
+  // 객체를 반환하면 this 대신 해당 객체가 반환됨
+  return { customName: name + '-custom' }
+}
+
+const user = new User('John')
+console.log(user.name) // undefined
+console.log(user.customName) // "John-custom"
+
+function Product(name) {
+  this.name = name
+
+  // 원시값을 반환하면 무시되고 this가 반환됨
+  return 42
+}
+
+const product = new Product('Phone')
+console.log(product.name) // "Phone"
+```
+
+### 화살표 함수의 this (Lexical this)
+
+화살표 함수는 자신만의 `this`를 가지지 않습니다. 화살표 함수 내부의 `this`는 함수가 정의된 시점의 상위 스코프의 `this`를 그대로 사용합니다. `call()`, `apply()`, `bind()`로도 `this`를 변경할 수 없습니다.
+
+```javascript
+const obj = {
+  name: 'Object',
+  regularFn: function () {
+    console.log(`Regular: ${this.name}`) // "Regular: Object"
+
+    const arrowFn = () => {
+      console.log(`Arrow: ${this.name}`) // "Arrow: Object" - 외부 스코프의 this 사용
+    }
+
+    arrowFn()
+  },
+}
+
+obj.regularFn()
+```
+
+### 우선순위
+
+`new` 바인딩 > 명시적 바인딩 > 암시적 바인딩 > 기본 바인딩
+화살표 함수는 다른 바인딩 규칙을 무시하므로 우선순위 체계에 포함되지 않습니다.
+
+```javascript
+function foo() {
+  console.log('this.name:', this.name)
+}
+
+const obj1 = { name: 'obj1', foo: foo }
+const obj2 = { name: 'obj2' }
+
+// 명시적 > 암시적
+obj1.foo.call(obj2) // this.name: obj2
+
+// 명시적 바인딩 + bind
+const boundFoo = foo.bind(obj1)
+boundFoo() // this.name: obj1
+boundFoo.call(obj2) // this.name: obj1 (bind가 우선)
+
+// new 바인딩 > bind
+function Bar(name) {
+  this.name = name
+}
+const boundBar = Bar.bind(obj1)
+const instance = new boundBar('instance')
+console.log(instance.name) // "instance" (new가 bind보다 우선)
+```
