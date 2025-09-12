@@ -1,42 +1,113 @@
 ---
 title: JavaScript - 실행 컨텍스트(Execution Context)
 date: '2022-09-08'
+lastmod: '2025-09-12'
 tags: ['JavaScript']
 ---
 
 ## 실행 컨텍스트 (Execution Context)
 
-실행 컨택스트는 자바스크립트 코드가 실행되는 환경의 추상적인 개념이다.
-자바스크립트에서 코드는 실행 컨텍스트 안에서 실행된다.
-\_실행 컨텍스트를 이해하면 호이스팅이나 스코프, 클로저 등을 이해하기 쉬워진다.
+실행 컨택스트는 자바스크립트 코드가 실행되는 환경을 추상화한 개념입니다. 즉, 코드가 실행되기 위한 환경이자 코드의 실행 흐름과 범위를 관리하는 방식입니다.
 
-### 실행 컨텍스트 종류
+자바스크립트 코드가 실행될 때 다음과 같은 과정이 일어납니다.
 
-#### Global Execution Context
+1. 자바스크립트 엔진이 스크립트를 만나면 **전역 실행 컨텍스트**를 생성합니다.
+2. 함수가 호출되면 해당 함수의 **함수 실행 컨텍스트**를 생성합니다.
+3. 각 실행 컨텍스트는 생성 단계(Creation Phase)와 실행 단계(Execution Phase)를 거칩니다.
+4. 함수 실행이 완료되면 해당 실행 컨텍스트는 제거되고, 제어권은 이전 컨텍스트로 돌아갑니다.
 
-기본 실행 컨텍스트로 하나의 프로그램에 하나의 전역 실행 컨텍스트만 있을 수 있다.
+실행 컨텍스트는 자바스크립트의 코드의 실행 흐름을 제어합니다.
 
-- window 같은 전역 객체를 생성한다.
-- this를 전역 객체로 설정한다.
+1. 코드를 구조화하여 변수와 함수가 적절한 범위 내에서 접근 가능하도록 합니다.
+2. 콜스택을 통해 실행 순서를 관리하여 코드가 순차적으로 실행되도록 합니다.
+3. 변수와 함수 선언을 메모리에 저장하고, 실행 컨텍스트가 종료되면 해당 메모리를 정리합니다.
+4. 변수나 함수 이름이 참조될 때, 현재 실행 컨텍스트부터 시작해 외부 환경 참조를 따라 해당 식별자를 찾는 과정을 정의합니다.
 
-#### Functional Execution Context
+## 실행 컨텍스트 유형
 
-함수가 호출될 때마다, 새로운 실행 컨텍스트가 생성된다.
+### 전역 실행 컨텍스트(Global Execution Context)
 
-#### Eval Function Execution Context
+전역 실행 컨텍스트는 자바스크립트 코드가 처음 실행될 때 기본적으로 생성되는 컨텍스트입니다.
 
-eval 함수안에 실행되는 코드가 갖는 실행 컨텍스트이다. (보안상 eval 사용하지 말 것)
+- 프로그램당 **단 하나만** 존재합니다.
+- 전역 객체를 생성합니다. (브라우저에서는 `window`, Node.js에서는 `global`)
+- `this` 값은 전역 객체를 가리킵니다.
 
-### 실행 컨텍스트 생성 과정 (ES6)
+### 함수 실행 컨텍스트(Function Execution Context)
 
-> 1. Creation Phase 2) Execution Phase
+함수가 호출될 때마다 해당 함수를 위한 새로운 실행 컨텍스트가 생성됩니다.
 
-### Creation Phase
+- 함수가 호출될 때마다 생성됩니다.
+- 각 함수 호출은 고유한 실행 컨텍스트를 가집니다.
+- 함수의 매개변수, 지역 변수, 중첩 함수 등이 이 컨텍스트 내에서 관리됩니다.
+- 함수 내부의 `this` 값은 함수 호출 방식에 따라 결정됩니다.
 
-Creation Phase에서는 두 가지가 생성됩니다.
+### 모듈 실행 컨텍스트
 
-1. LexicalEnvironment
-2. VariableEnvironment
+ES6 모듈 시스템(`import`/`export`)을 사용할 때 생성되는 실행 컨텍스트입니다.
+
+- 각 모듈은 자체 모듈 실행 컨텍스트를 가집니다.
+- 모듈 내의 최상위 코드는 전역 컨텍스트가 아닌 모듈 컨텍스트에서 실행됩니다.
+- 자체 스코프를 가지므로 모듈 내에서 선언되는 변수는 자동으로 전역 객체의 속성이 되지 않습니다.
+- 기본적으로 엄격 모드로 실행됩니다.
+
+### Eval 실행 컨텍스트
+
+`eval()` 함수 내에서 실행되는 코드를 위한 실행 컨텍스트입니다.
+
+- `eval()` 함수가 호출될 때 싱성됩니다.
+- 보안 문제와 성능 저하 때문에 현대 자바스크립트에서는 사용하지 않는 것을 권장합니다.
+
+## 렉시컬 환경(Lexical Environment)
+
+```
+렉시컬 환경 = {
+    환경 레코드: {
+        // 함수 환경 레코드인 경우에만
+        arguments: <arguments 객체>,
+        [[ThisValue]]: <this 값>,
+
+        // 식별자 바인딩
+        변수1: 값1,
+        변수2: 값2,
+        ...
+    },
+    외부 환경 참조: [상위 렉시컬 환경에 대한 참조 또는 null],
+}
+```
+
+렉시컬 환경(Lexical Environment)은 자바스크립트 엔진이 코드를 실행하면서 식별자를 찾고 관리하는 구조입니다. 실행 컨텍스트의 구성 요소 중 하나입니다. \
+렉시컬 환경은 크게 두 가지 요소로 구성됩니다.
+
+1. **환경 레코드(Environment Record)**: 식별자와 그 값의 매핑을 저장
+2. **외부 환경 참조(Outer Lexical Environment Reference)**: 외부 렉시컬 환경을 참조
+
+### 환경 레코드(Environment Record)
+
+환경 레코드는 현재 렉시컬 환경 내에서 선언된 변수와 함수를 저장합니다.
+
+- **선언적 환경 레코드(Declarative Environment Record)**: 변수와 함수 선언(`let`, `const`)을 직접 저장하는 가장 기본적인 형태의 환경 레코드입니다.
+- **객체 환경 레코드(Object Environment Record)**: 글로벌 컨텍스트나 `with`문과 같은 경우에 사용되는 환경 레코드입니다.
+- **함수 환경 레코드(Function Environment Record)**: 함수가 호출될 때 생성되는 특수한 선언적 환경 레코드로 함수의 매개변수, 지역 변수, `arguments` 객체를 관리하고 `this` 바인딩을 참조합니다.
+
+### 외부 환경 참조(Outer Lexical Environment Reference)
+
+외부 환경 참조는 현재 렉시컬 환경 외부의 렉시컬 환경을 가리키는 포인터입니다. 이를 통해 중첩된 스코프에서 변수 검색이 가능해집니다.
+
+- 함수의 렉시컬 환경은 함수가 **정의된 위치**에 따라 외부 환경 참조가 결정됩니다.
+- 전역 렉시컬 환경의 외부 환경 참조는 `null`입니다.
+
+### this 바인딩(This Binding)
+
+`this`는 실행 컨텍스트의 특별한 식별자로, 함수가 어떻게 호출되었는지에 따라 값이 결정됩니다.
+
+### Variable Environment와의 차이점
+
+- **Lexical Environment**: `let`, `const` 변수와 블록 스코프를 처리하고 변수는 TDZ(Temporal Dead Zone) 상태
+
+- **Variable Environment**: `var` 변수와 함수 선언을 처리하며 `undefined`로 초기화
+
+## 실행 컨텍스트의 생성 과정
 
 ```
 ExecutionContext = {
@@ -45,28 +116,29 @@ ExecutionContext = {
 }
 ```
 
-#### 1. Lexical Environment
+실행 컨텍스트는 두 단계를 거쳐 생성되고 처리됩니다.
 
-**Environment Record**
+1. 생성 단계(Creation Phase)
+2. 실행 단계(Execution Phase)
 
-변수와 함수 선언을 lexical environment 안에 저장한다.
+### 생성 단계(Creation Phase)
 
-- Declarative environment record: 변수와 함수 선언을 저장
-- Object environment record: 전역 코드의 lexical environment는 객체 환경 레코드를 포함한다. 전역 바인딩 객체를 저장하고 각각의 객체 프로퍼티를 위한 새로운 엔트리를 생성한다.
+생성 단계에서는 실행 컨텍스트가 생성되고 초기화되지만, 실제 코드는 실행되지 않습니다.
 
-**Reference to the outer environment**
-outer lexical environment를 접근한다. 현재 lexical environment에서 변수를 찾을 수 없을 때, 자바스크립트 엔진이 outer environmet에서 찾을 수 있게 한다.
+1. 환경 레코드 생성: 컨텍스트 유형에 따라 적절한 환경 레코드 생성 및 변수와 함수 선언을 저장
 
-**this binding**
-this 값을 결정한다.
+2. 외부 환경 참조 설정: 상위 렉시컬 환경을 참조 설정
 
-#### 2. Variable Environment
+3. this 바인딩: this 값을 결정
 
-variable environment 또한 lexical environment를 갖느다. ES6에선 Lexical Environment는 let과 const로 선언된 변수나 함수를 저장하고 Variable Environment는 오직 var 변수만 저장한다.
+### 실행 단계(Execution Phase)
 
-### Execution Phase
+생성 단계가 완료되면 코드가 한 줄씩 실행되는 실행 단계가 시작됩니다.
 
-Execution Phase에서는 모든 변수가 할당되고 코드가 마침내 실행된다.
+1. 코드 실행: 변수에 값이 할당되고 함수가 호출되면 새로운 실행 컨텍스트가 생성
+2. 식별자 해결(Identifier Resolution): 변수나 함수를 참조할 때 현재 렉시컬 환경에서 시작하여 외부 환경 참조를 따라 검색
 
 **참조**\
-[Understanding Execution Context and Execution Stack in Javascript](https://blog.bitsrc.io/understanding-execution-context-and-execution-stack-in-javascript-1c9ea8642dd0)
+[Understanding Execution Context and Execution Stack in Javascript](https://blog.bitsrc.io/understanding-execution-context-and-execution-stack-in-javascript-1c9ea8642dd0) \
+[ECMAScript 명세](https://tc39.es/ecma262/#sec-execution-contexts) \
+[MDN - 실행 컨텍스트 및 스택](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions#function_scope)
